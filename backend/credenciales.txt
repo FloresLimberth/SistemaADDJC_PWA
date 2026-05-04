@@ -1,0 +1,122 @@
+===============================================
+CREDENCIALES DE USUARIOS DE PRUEBA - ADDJC
+===============================================
+
+IMPORTANTE: Estos usuarios son SOLO para desarrollo/testing.
+NO usar estas credenciales en produccion.
+
+===============================================
+1. ADMINISTRADOR
+===============================================
+Email:    admin@addjc.com
+Password: admin123
+Rol:      ADMINISTRADOR
+CI:       1000001
+Nombre:   Administrador Sistema
+
+Permisos:
+- Gestion completa de usuarios (crear, editar, eliminar)
+- Configuracion del sistema
+- Auditorias y logs
+- NO tiene acceso a datos deportivos (planificacion, atletas, tests)
+
+===============================================
+2. COMITE TECNICO
+===============================================
+Email:    comite@addjc.com
+Password: comite123
+Rol:      COMITE_TECNICO
+CI:       2000002
+Nombre:   Comite Tecnico
+
+Permisos:
+- Planificacion estrategica (macrociclos, mesociclos, microciclos)
+- Aprobar recomendaciones del algoritmo
+- Ver TODOS los atletas del sistema
+- Gestion de baremos y nomenclatura
+- Reportes y estadisticas generales
+
+===============================================
+3. ENTRENADOR
+===============================================
+Email:    entrenador@addjc.com
+Password: entrenador123
+Rol:      ENTRENADOR
+CI:       3000003
+Nombre:   Entrenador Principal
+
+Permisos:
+- Registrar tests fisicos de atletas asignados
+- Registrar datos post-entrenamiento (RPE, sueno, lesiones)
+- Ver SOLO atletas asignados a el
+- Ver planificacion de sus atletas
+- NO puede crear/editar macrociclos
+
+===============================================
+4. ATLETA
+===============================================
+Email:    atleta@addjc.com
+Password: atleta123
+Rol:      ATLETA
+CI:       4000004
+Nombre:   Atleta Prueba
+
+Permisos:
+- Ver su propia planificacion
+- Ver graficos de progreso personal
+- Ver notificaciones y recomendaciones
+- Solo lectura (NO puede editar nada)
+
+===============================================
+ENDPOINTS DE AUTENTICACION
+===============================================
+
+Login:
+POST http://localhost:3000/api/auth/login
+Body (JSON):
+{
+  "email": "admin@addjc.com",
+  "password": "admin123"
+}
+
+Respuesta exitosa:
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 2,
+    "email": "admin@addjc.com",
+    "nombreCompleto": "Administrador Sistema",
+    "rol": "ADMINISTRADOR"
+  }
+}
+
+Perfil (requiere token):
+GET http://localhost:3000/api/auth/profile
+Headers:
+Authorization: Bearer <access_token>
+
+===============================================
+NOTAS IMPORTANTES
+===============================================
+
+1. Los tokens JWT expiran en 1 hora (JWT_EXPIRATION=1h)
+2. El secret JWT es: addjc_judo_secret_key_2025_desarrollo_cambiar_en_produccion
+3. Cambiar TODAS estas credenciales antes de produccion
+4. La contrasena minima es de 6 caracteres
+5. Los tokens se validan en cada peticion con JwtAuthGuard
+6. El rol se verifica con RolesGuard en endpoints especificos
+
+===============================================
+ESTRUCTURA DE TOKEN JWT
+===============================================
+
+Payload:
+{
+  "sub": <user_id>,        // ID del usuario
+  "email": <email>,         // Email del usuario
+  "rol": <rol>,             // Rol del usuario
+  "iat": <issued_at>,       // Fecha de emision
+  "exp": <expiration>       // Fecha de expiracion
+}
+
+===============================================

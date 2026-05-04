@@ -1,0 +1,9 @@
+id,ci,nombreCompleto,email,contrasena,rol,estado,fechaRegistro,ultimoAcceso,createdAt,updatedAt
+2,1000001,Administrador Sistema,admin@addjc.com,$2b$10$26Pdd0gIJkLjdyoH8XKPNu6e5zzVn909Redi3yAIaGCXhgl3nxNM2,ADMINISTRADOR,t,2025-12-17 12:23:55.665,,2025-12-17 12:23:55.665,2025-12-17 12:23:55.665
+3,2000002,Comite Tecnico,comite@addjc.com,$2b$10$wSWRowogHMd0Eg5rC3hPXulOb/LtdHNTqbygm00wyvLMF9OLjP9Py,COMITE_TECNICO,t,2025-12-17 12:23:55.665,,2025-12-17 12:23:55.665,2025-12-17 12:23:55.665
+4,3000003,Entrenador Principal,entrenador@addjc.com,$2b$10$uoOEe8Yn0CQWxco/V4yz6.80N61dQWCZGesZNUCo7cOBo.3tFUkaK,ENTRENADOR,t,2025-12-17 12:23:55.665,,2025-12-17 12:23:55.665,2025-12-17 12:23:55.665
+5,4000004,Atleta Prueba,atleta@addjc.com,$2b$10$J/DO1mezciuQkXSGfeW6f.W.JRUUff3A2ON8p2zJQ72UDUxkg.9h6,ATLETA,t,2025-12-17 12:23:55.665,,2025-12-17 12:23:55.665,2025-12-17 12:23:55.665
+9,8000001,Atleta para Asignar,atleta.asignar@addjc.com,$2b$10$bban4goHN08obbjlVq8nr.hF.YpmFn21mfVjUQcMA56m0/mzAHlS6,ATLETA,t,2025-12-17 19:34:45.357,,2025-12-17 19:34:45.357,2025-12-17 19:34:45.357
+11,37283283,Ejemeplo juan perez,ejemplo1@gmail.com,$2b$10$2obUTRSq0wL6t8.rbuK8Lu0Ze9xQzTBHCPX.1A6YcZzod3JIQYDtW,ATLETA,t,2026-01-04 19:20:36.962,,2026-01-04 19:20:36.962,2026-01-04 19:20:36.962
+12,34433223,gabi montes,guba@gmail.com,$2b$10$KxYqlcGibkYrptPmZh817eqj.c/Tz0GiavxNIgylTSGsycgtNykTS,ATLETA,t,2026-01-04 20:14:05.548,,2026-01-04 20:14:05.548,2026-01-04 20:14:05.548
+13,90439403,Ejemeplo juan rodriguez,geas@gmail.com,$2b$10$OKqJRPuMXhzDP5ngGSmo5uXOtoPCgDuIggLVMU0vmt0nbu0HocQz.,ATLETA,t,2026-01-04 21:03:29.387,,2026-01-04 21:03:29.387,2026-01-04 21:03:29.387

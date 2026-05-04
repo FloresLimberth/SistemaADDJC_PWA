@@ -1,0 +1,779 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  id                        BigInt                       @id @default(autoincrement())
+  ci                        String                       @unique @db.VarChar(20)
+  nombreCompleto            String                       @db.VarChar(255)
+  email                     String                       @unique @db.VarChar(255)
+  contrasena                String                       @db.VarChar(255)
+  rol                       RolUsuario
+  estado                    Boolean                      @default(true)
+  fechaRegistro             DateTime                     @default(now())
+  ultimoAcceso              DateTime?
+  createdAt                 DateTime                     @default(now())
+  updatedAt                 DateTime                     @updatedAt
+  alertasRecibidas          AlertaDestinatario[]
+  asignacionesRealizadas    AsignacionAtletaMicrociclo[]
+  atleta                    Atleta?
+  auditorias                AuditoriaAcceso[]
+  entrenador                Entrenador?
+  historialRecomendaciones  HistorialRecomendacion[]
+  macrociclosCreados        Macrociclo[]
+  notificaciones            Notificacion[]
+  recomendacionesAplicadas  Recomendacion[]              @relation("RecomendacionAplicada")
+  recomendacionesRevisadas  Recomendacion[]              @relation("RecomendacionRevisada")
+  resetPasswords            ResetPassword[]
+
+  @@index([email])
+  @@index([ci])
+  @@index([rol])
+  @@index([estado])
+  @@map("usuarios")
+}
+
+model Atleta {
+  id                         BigInt                       @id @default(autoincrement())
+  usuarioId                  BigInt                       @unique
+  municipio                  String                       @db.VarChar(100)
+  municipioClub              String                       @db.VarChar(100)
+  club                       String                       @db.VarChar(100)
+  categoria                  String                       @db.VarChar(50)
+  fechaNacimiento            DateTime                     @db.Date
+  edad                       Int
+  direccion                  String?
+  telefono                   String?                      @db.VarChar(50)
+  entrenadorAsignadoId       BigInt?
+  categoriaPeso              CategoriaPeso
+  pesoActual                 Decimal?                     @db.Decimal(5, 2)
+  perfilActual               PerfilAtleta?
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  alertas                    AlertaSistema[]
+  asignacionesMicrociclos    AsignacionAtletaMicrociclo[]
+  entrenadorAsignado         Entrenador?                  @relation(fields: [entrenadorAsignadoId], references: [id])
+  usuario                    Usuario                      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  recomendaciones            Recomendacion[]
+  registrosPostEntrenamiento RegistroPostEntrenamiento[]
+  testsFisicos               TestFisico[]
+
+  @@index([usuarioId])
+  @@index([entrenadorAsignadoId])
+  @@index([club])
+  @@index([municipioClub])
+  @@index([categoria])
+  @@index([categoriaPeso])
+  @@map("atletas")
+}
+
+model Entrenador {
+  id                         BigInt                      @id @default(autoincrement())
+  usuarioId                  BigInt                      @unique
+  municipio                  String                      @db.VarChar(100)
+  especialidad               String?                     @db.VarChar(100)
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  atletasAsignados           Atleta[]
+  dolenciasRecuperadas       Dolencia[]                  @relation("DolenciaRecuperacion")
+  usuario                    Usuario                     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  registrosPostEntrenamiento RegistroPostEntrenamiento[]
+  testsRegistrados           TestFisico[]
+
+  @@index([usuarioId])
+  @@map("entrenadores")
+}
+
+model Macrociclo {
+  id                BigInt           @id @default(autoincrement())
+  nombre            String           @db.VarChar(100)
+  temporada         String           @db.VarChar(50)
+  equipo            String           @db.VarChar(100)
+  categoriaObjetivo String           @db.VarChar(50)
+  objetivo1         String
+  objetivo2         String
+  objetivo3         String
+  fechaInicio       DateTime         @db.Date
+  fechaFin          DateTime         @db.Date
+  estado            EstadoMacrociclo
+  creadoPor         BigInt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  creador           Usuario          @relation(fields: [creadoPor], references: [id])
+  mesociclos        Mesociclo[]
+
+  @@index([estado])
+  @@index([creadoPor])
+  @@map("macrociclos")
+}
+
+model Mesociclo {
+  id              BigInt         @id @default(autoincrement())
+  macrocicloId    BigInt
+  nombre          String         @db.VarChar(100)
+  codigoMesociclo String         @db.VarChar(50)
+  etapa           EtapaMesociclo
+  fechaInicio     DateTime       @db.Date
+  fechaFin        DateTime       @db.Date
+  objetivoFisico  String
+  objetivoTecnico String
+  objetivoTactico String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  macrociclo      Macrociclo     @relation(fields: [macrocicloId], references: [id], onDelete: Cascade)
+  microciclos     Microciclo[]
+
+  @@index([macrocicloId])
+  @@map("mesociclos")
+}
+
+model Microciclo {
+  id                  BigInt                       @id @default(autoincrement())
+  mesocicloId         BigInt?
+  codigoMicrociclo    String                       @db.VarChar(50)
+  fechaInicio         DateTime                     @db.Date
+  fechaFin            DateTime                     @db.Date
+  tipoMicrociclo      TipoMicrociclo
+  volumenTotal        Decimal                      @db.Decimal(10, 2)
+  intensidadPromedio  Decimal                      @db.Decimal(5, 2)
+  objetivoSemanal     String
+  observaciones       String?
+  creadoPor           CreadoPor                    @default(COMITE_TECNICO)
+  mediaVolumen        Decimal?                     @db.Decimal(5, 2)
+  mediaIntensidad     Decimal?                     @db.Decimal(5, 2)
+  sentidoVolumen      SentidoCarga?
+  sentidoIntensidad   SentidoCarga?
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+  asignacionesAtletas AsignacionAtletaMicrociclo[]
+  mesociclo           Mesociclo?                   @relation(fields: [mesocicloId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  recomendaciones     Recomendacion[]
+  sesiones            Sesion[]
+  testsFisicos        TestFisico[]
+
+  @@index([mesocicloId])
+  @@index([fechaInicio])
+  @@map("microciclos")
+}
+
+model Sesion {
+  id                         BigInt                      @id @default(autoincrement())
+  microcicloId               BigInt
+  fecha                      DateTime                    @db.Date
+  diaSemana                  DiaSemana
+  numeroSesion               Int
+  tipoSesion                 TipoSesion
+  turno                      Turno                       @default(COMPLETO)
+  tipoPlanificacion          TipoPlanificacion           @default(INICIAL)
+  sesionBaseId               BigInt?
+  creadoPor                  CreadoPor                   @default(COMITE_TECNICO)
+  duracionPlanificada        Int
+  volumenPlanificado         Int?
+  intensidadPlanificada      Int?
+  contenidoFisico            String?
+  contenidoTecnico           String?
+  contenidoTactico           String?
+  calentamiento              String?
+  partePrincipal             String?
+  vueltaCalma                String?
+  observaciones              String?
+  materialNecesario          String?
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  volumenReal                Int?
+  intensidadReal             Int?
+  aprobado                   Boolean                     @default(false)
+  perfilUtilizado            String?                     @db.VarChar(50)
+  justificacionAlgoritmo     String?
+  recomendacionesGeneradas   Recomendacion[]
+  registrosPostEntrenamiento RegistroPostEntrenamiento[]
+  microciclo                 Microciclo                  @relation(fields: [microcicloId], references: [id], onDelete: Cascade)
+  sesionBase                 Sesion?                     @relation("SesionAjustes", fields: [sesionBaseId], references: [id])
+  ajustesGenerados           Sesion[]                    @relation("SesionAjustes")
+  testsFisicos               TestFisico[]
+  ejerciciosSesion           EjercicioSesion[]
+
+  @@index([microcicloId])
+  @@index([fecha])
+  @@index([sesionBaseId])
+  @@index([aprobado])
+  @@map("sesiones")
+}
+
+model TestFisico {
+  id                   BigInt                  @id @default(autoincrement())
+  atletaId             BigInt
+  entrenadorRegistroId BigInt
+  sesionId             BigInt
+  fechaTest            DateTime                @db.Date
+  microcicloId         BigInt
+  pressBanca           Decimal?                @db.Decimal(5, 2)
+  pressBancaIntensidad Decimal?                @db.Decimal(5, 2)
+  tiron                Decimal?                @db.Decimal(5, 2)
+  tironIntensidad      Decimal?                @db.Decimal(5, 2)
+  sentadilla           Decimal?                @db.Decimal(5, 2)
+  sentadillaIntensidad Decimal?                @db.Decimal(5, 2)
+  barraFija            Int?
+  paralelas            Int?
+  navettePalier        Decimal?                @db.Decimal(5, 2)
+  navetteVO2max        Decimal?                @db.Decimal(5, 2)
+  test1500m            String?                 @db.VarChar(10)
+  observaciones        String?
+  condicionesTest      String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  asistio              Boolean                 @default(true)
+  motivoInasistencia   String?
+  recomendaciones      Recomendacion[]
+  atleta               Atleta                  @relation(fields: [atletaId], references: [id], onDelete: Cascade)
+  entrenador           Entrenador              @relation(fields: [entrenadorRegistroId], references: [id])
+  microciclo           Microciclo              @relation(fields: [microcicloId], references: [id])
+  sesion               Sesion                  @relation(fields: [sesionId], references: [id])
+
+  @@index([atletaId])
+  @@index([entrenadorRegistroId])
+  @@index([sesionId])
+  @@index([microcicloId])
+  @@index([fechaTest])
+  @@map("tests_fisicos")
+}
+
+model RegistroPostEntrenamiento {
+  id                    BigInt          @id @default(autoincrement())
+  atletaId              BigInt
+  sesionId              BigInt
+  entrenadorRegistroId  BigInt
+  fechaRegistro         DateTime        @default(now())
+  asistio               Boolean
+  motivoInasistencia    String?
+  ejerciciosCompletados Decimal         @db.Decimal(5, 2)
+  intensidadAlcanzada   Decimal         @db.Decimal(5, 2)
+  duracionReal          Int
+  rpe                   Int
+  calidadSueno          Int
+  horasSueno            Decimal?        @db.Decimal(3, 1)
+  estadoAnimico         Int
+  observaciones         String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  dolencias              Dolencia[]
+  recomendaciones        Recomendacion[]
+  atleta                 Atleta          @relation(fields: [atletaId], references: [id], onDelete: Cascade)
+  entrenador             Entrenador      @relation(fields: [entrenadorRegistroId], references: [id])
+  sesion                 Sesion          @relation(fields: [sesionId], references: [id])
+  rendimientosEjercicios RendimientoEjercicio[]
+
+  @@index([atletaId])
+  @@index([sesionId])
+  @@index([entrenadorRegistroId])
+  @@index([fechaRegistro])
+  @@map("registros_post_entrenamiento")
+}
+
+model Dolencia {
+  id                          BigInt                    @id @default(autoincrement())
+  registroPostEntrenamientoId BigInt
+  zona                        String                    @db.VarChar(100)
+  nivel                       Int
+  descripcion                 String?
+  tipoLesion                  TipoLesion?
+  createdAt                   DateTime                  @default(now())
+  updatedAt                   DateTime                  @updatedAt
+  fechaRecuperacion           DateTime?
+  recuperado                  Boolean                   @default(false)
+  recuperadoPor               BigInt?
+  entrenadorRecuperacion      Entrenador?               @relation("DolenciaRecuperacion", fields: [recuperadoPor], references: [id])
+  registroPostEntrenamiento   RegistroPostEntrenamiento @relation(fields: [registroPostEntrenamientoId], references: [id], onDelete: Cascade)
+
+  @@index([registroPostEntrenamientoId])
+  @@index([recuperado])
+  @@index([recuperadoPor])
+  @@map("dolencias")
+}
+
+model Recomendacion {
+  id                          BigInt                     @id @default(autoincrement())
+  atletaId                    BigInt
+  microcicloAfectadoId        BigInt?
+  tipo                        TipoRecomendacion
+  prioridad                   Prioridad
+  titulo                      String                     @db.VarChar(255)
+  mensaje                     String
+  datosAnalisis               Json?
+  accionSugerida              String?
+  sesionesAfectadas           Json?
+  generoSesiones              Boolean                    @default(false)
+  sesionGeneradaId            BigInt?
+  estado                      EstadoRecomendacion        @default(PENDIENTE)
+  revisadoPor                 BigInt?
+  fechaRevision               DateTime?
+  comentarioRevision          String?
+  modificaciones              Json?
+  aplicadoPor                 BigInt?
+  fechaAplicacion             DateTime?
+  registroPostEntrenamientoId BigInt?
+  testFisicoId                BigInt?
+  createdAt                   DateTime                   @default(now())
+  updatedAt                   DateTime                   @updatedAt
+  historial                   HistorialRecomendacion[]
+  notificaciones              Notificacion[]
+  aplicador                   Usuario?                   @relation("RecomendacionAplicada", fields: [aplicadoPor], references: [id])
+  atleta                      Atleta                     @relation(fields: [atletaId], references: [id], onDelete: Cascade)
+  microcicloAfectado          Microciclo?                @relation(fields: [microcicloAfectadoId], references: [id])
+  registroPostEntrenamiento   RegistroPostEntrenamiento? @relation(fields: [registroPostEntrenamientoId], references: [id])
+  revisor                     Usuario?                   @relation("RecomendacionRevisada", fields: [revisadoPor], references: [id])
+  sesionGenerada              Sesion?                    @relation(fields: [sesionGeneradaId], references: [id])
+  testFisico                  TestFisico?                @relation(fields: [testFisicoId], references: [id])
+
+  @@index([atletaId])
+  @@index([microcicloAfectadoId])
+  @@index([sesionGeneradaId])
+  @@index([revisadoPor])
+  @@index([aplicadoPor])
+  @@index([registroPostEntrenamientoId])
+  @@index([testFisicoId])
+  @@index([estado])
+  @@index([prioridad])
+  @@map("recomendaciones")
+}
+
+// Audit trail para cambios en recomendaciones del algoritmo
+model HistorialRecomendacion {
+  id               BigInt              @id @default(autoincrement())
+  recomendacionId  BigInt
+  estadoAnterior   EstadoRecomendacion?
+  estadoNuevo      EstadoRecomendacion
+  usuarioId        BigInt
+  accion           String              @db.VarChar(50)
+  comentario       String?
+  datosAdicionales Json?
+  createdAt        DateTime            @default(now())
+  recomendacion    Recomendacion       @relation(fields: [recomendacionId], references: [id], onDelete: Cascade)
+  usuario          Usuario             @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([recomendacionId])
+  @@index([usuarioId])
+  @@index([createdAt(sort: Desc)])
+  @@map("historial_recomendaciones")
+}
+
+model Notificacion {
+  id              BigInt           @id @default(autoincrement())
+  destinatarioId  BigInt
+  recomendacionId BigInt?
+  tipo            TipoNotificacion
+  titulo          String           @db.VarChar(255)
+  mensaje         String
+  leida           Boolean          @default(false)
+  fechaLeida      DateTime?
+  prioridad       Prioridad        @default(MEDIA)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  destinatario    Usuario          @relation(fields: [destinatarioId], references: [id], onDelete: Cascade)
+  recomendacion   Recomendacion?   @relation(fields: [recomendacionId], references: [id])
+
+  @@index([destinatarioId, leida])
+  @@index([recomendacionId])
+  @@map("notificaciones")
+}
+
+// Alerta del sistema - datos unicos de la alerta (sin duplicar por destinatario)
+// Usa deduplicacion: si ya existe alerta similar, incrementa ocurrencias en lugar de crear nueva
+model AlertaSistema {
+  id               BigInt               @id @default(autoincrement())
+  atletaId         BigInt
+  tipo             TipoAlerta
+  titulo           String               @db.VarChar(255)
+  descripcion      String
+  severidad        Severidad
+  datosContexto    Json?
+  ocurrencias      Int                  @default(1)
+  ultimaOcurrencia DateTime?
+  createdAt        DateTime             @default(now())
+  atleta           Atleta               @relation(fields: [atletaId], references: [id], onDelete: Cascade)
+  destinatarios    AlertaDestinatario[]
+
+  @@index([atletaId])
+  @@index([tipo])
+  @@index([severidad])
+  @@index([createdAt(sort: Desc)])
+  @@map("alertas_sistema")
+}
+
+// Tabla intermedia: relaciona alertas con sus destinatarios y estado de lectura
+model AlertaDestinatario {
+  id             BigInt       @id @default(autoincrement())
+  alertaId       BigInt
+  destinatarioId BigInt
+  leida          Boolean      @default(false)
+  fechaLeida     DateTime?
+  createdAt      DateTime     @default(now())
+  alerta         AlertaSistema @relation(fields: [alertaId], references: [id], onDelete: Cascade)
+  destinatario   Usuario      @relation(fields: [destinatarioId], references: [id], onDelete: Cascade)
+
+  @@unique([alertaId, destinatarioId])
+  @@index([destinatarioId, leida])
+  @@index([alertaId])
+  @@map("alerta_destinatarios")
+}
+
+model ToleranciasPeso {
+  id                BigInt            @id @default(autoincrement())
+  categoriaPeso     String            @db.VarChar(10)
+  periodo           PeriodoTolerancia
+  toleranciaLunes   Decimal           @db.Decimal(4, 2)
+  toleranciaViernes Decimal           @db.Decimal(4, 2)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([categoriaPeso, periodo])
+  @@map("tolerancias_peso")
+}
+
+model CatalogoEjercicios {
+  id                   BigInt        @id @default(autoincrement())
+  nombre               String        @db.VarChar(255)
+  tipo                 TipoEjercicio
+  subtipo              String?       @db.VarChar(100)
+  descripcion          String?
+  instrucciones        String?
+  materialNecesario    String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  categoria            String?       @db.VarChar(50)
+  duracionMinutos      Int?
+  intensidadSugerida   Decimal?      @db.Decimal(5, 2)
+  sistemaEnergetico    String?       @db.VarChar(50)
+  zonasCuerpo          String[]      @default([])
+  perfilesRecomendados String[]      @default([])
+  nivelDificultad      Int?          @default(1)
+  etapasRecomendadas   String[]      @default([])
+  tiposMicrociclo      String[]      @default([])
+  contraindicaciones   String?
+  intensidadMinima     Decimal?      @db.Decimal(5, 2)
+  intensidadMaxima     Decimal?      @db.Decimal(5, 2)
+  activo               Boolean?      @default(true)
+  ejerciciosSesion     EjercicioSesion[]
+
+  @@index([tipo])
+  @@index([subtipo])
+  @@index([activo])
+  @@index([nivelDificultad], map: "catalogo_ejercicios_nivel_idx")
+  @@map("catalogo_ejercicios")
+}
+
+model Baremos {
+  id            BigInt   @id @default(autoincrement())
+  tipo          String   @db.VarChar(20)
+  nivel         Int      @db.SmallInt
+  porcentajeMin Decimal  @db.Decimal(5, 2)
+  porcentajeMax Decimal  @db.Decimal(5, 2)
+  minutosMin    Int?
+  minutosMax    Int?
+  fcMin         Int?
+  fcMax         Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([tipo, nivel])
+  @@index([tipo])
+  @@index([nivel])
+  @@map("baremos")
+}
+
+model Nomenclatura {
+  id                BigInt   @id @default(autoincrement())
+  codigo            String   @unique @db.VarChar(20)
+  nombreCompleto    String   @db.VarChar(100)
+  categoria         String   @db.VarChar(50)
+  descripcion       String?
+  wintPercent       Decimal? @db.Decimal(5, 2)
+  sistemaEnergetico String?  @db.VarChar(50)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([codigo])
+  @@index([categoria])
+  @@map("nomenclatura")
+}
+
+model ZonaEsfuerzo {
+  id             BigInt   @id @default(autoincrement())
+  codigo         String   @unique @db.VarChar(50)
+  nombreCompleto String   @db.VarChar(100)
+  categoria      String   @db.VarChar(50)
+  wintPercent    Decimal? @db.Decimal(5, 2)
+  descripcion    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([codigo])
+  @@index([categoria])
+  @@map("zonas_esfuerzo")
+}
+
+model AsignacionAtletaMicrociclo {
+  id              BigInt     @id @default(autoincrement())
+  atletaId        BigInt
+  microcicloId    BigInt
+  asignadoPor     BigInt
+  fechaAsignacion DateTime   @default(now())
+  observaciones   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  asignador       Usuario    @relation(fields: [asignadoPor], references: [id])
+  atleta          Atleta     @relation(fields: [atletaId], references: [id], onDelete: Cascade)
+  microciclo      Microciclo @relation(fields: [microcicloId], references: [id], onDelete: Cascade)
+
+  @@unique([atletaId, microcicloId])
+  @@index([atletaId])
+  @@index([microcicloId])
+  @@index([asignadoPor])
+  @@map("asignaciones_atleta_microciclo")
+}
+
+model ResetPassword {
+  id        BigInt   @id @default(autoincrement())
+  usuarioId BigInt
+  token     String   @unique @db.VarChar(255)
+  expiraEn  DateTime
+  usado     Boolean  @default(false)
+  createdAt DateTime @default(now())
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([usuarioId])
+  @@map("reset_passwords")
+}
+
+model AuditoriaAcceso {
+  id        BigInt   @id @default(autoincrement())
+  usuarioId BigInt?
+  accion    String   @db.VarChar(100)
+  ip        String   @db.VarChar(45)
+  userAgent String
+  exito     Boolean
+  createdAt DateTime @default(now())
+  recurso   String?  @db.VarChar(50)
+  recursoId BigInt?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@index([createdAt])
+  @@index([recurso, recursoId])
+  @@map("auditorias_acceso")
+}
+
+// Vinculacion de ejercicios del catalogo a sesiones especificas
+// Permite rastrear que ejercicios se asignaron a cada sesion
+model EjercicioSesion {
+  id              BigInt   @id @default(autoincrement())
+  sesionId        BigInt   @map("sesion_id")
+  ejercicioId     BigInt   @map("ejercicio_id")
+  orden           Int
+  duracionMinutos Int?     @map("duracion_minutos")
+  repeticiones    Int?
+  series          Int?
+  intensidad      Decimal? @db.Decimal(5, 2)
+  observaciones   String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  sesion       Sesion             @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  ejercicio    CatalogoEjercicios @relation(fields: [ejercicioId], references: [id])
+  rendimientos RendimientoEjercicio[]
+
+  @@unique([sesionId, ejercicioId, orden])
+  @@index([sesionId])
+  @@index([ejercicioId])
+  @@map("ejercicios_sesion")
+}
+
+// Rendimiento individual por ejercicio en un registro post-entrenamiento
+// Permite analizar el desempeno especifico en cada ejercicio
+model RendimientoEjercicio {
+  id                          BigInt   @id @default(autoincrement())
+  registroPostEntrenamientoId BigInt   @map("registro_post_entrenamiento_id")
+  ejercicioSesionId           BigInt   @map("ejercicio_sesion_id")
+  completado                  Boolean  @default(false)
+  rendimiento                 Int?
+  dificultadPercibida         Int?     @map("dificultad_percibida")
+  tiempoReal                  Int?     @map("tiempo_real")
+  observacion                 String?
+  motivoNoCompletado          String?  @map("motivo_no_completado")
+  createdAt                   DateTime @default(now()) @map("created_at")
+
+  registro        RegistroPostEntrenamiento @relation(fields: [registroPostEntrenamientoId], references: [id], onDelete: Cascade)
+  ejercicioSesion EjercicioSesion           @relation(fields: [ejercicioSesionId], references: [id])
+
+  @@unique([registroPostEntrenamientoId, ejercicioSesionId])
+  @@index([registroPostEntrenamientoId])
+  @@index([ejercicioSesionId])
+  @@index([rendimiento])
+  @@map("rendimiento_ejercicio")
+}
+
+enum RolUsuario {
+  ADMINISTRADOR
+  COMITE_TECNICO
+  ENTRENADOR
+  ATLETA
+}
+
+enum CategoriaPeso {
+  MENOS_60K
+  MENOS_66K
+  MENOS_73K
+  MENOS_81K
+  MENOS_90K
+  MENOS_100K
+  MAS_100K
+}
+
+enum EstadoMacrociclo {
+  PLANIFICADO
+  EN_CURSO
+  COMPLETADO
+  CANCELADO
+}
+
+enum EtapaMesociclo {
+  PREPARACION_GENERAL
+  PREPARACION_ESPECIFICA
+  COMPETITIVA
+  TRANSICION
+}
+
+enum TipoMicrociclo {
+  CARGA
+  DESCARGA
+  CHOQUE
+  RECUPERACION
+  COMPETITIVO
+}
+
+enum SentidoCarga {
+  ASCENDENTE
+  DESCENDENTE
+  MANTENIMIENTO
+}
+
+enum CreadoPor {
+  COMITE_TECNICO
+  SISTEMA_ALGORITMO
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
+enum TipoSesion {
+  ENTRENAMIENTO
+  TEST
+  RECUPERACION
+  DESCANSO
+  COMPETENCIA
+}
+
+enum Turno {
+  MANANA
+  TARDE
+  COMPLETO
+}
+
+enum TipoPlanificacion {
+  INICIAL
+  AJUSTE_AUTOMATICO
+}
+
+enum TipoRecomendacion {
+  INICIAL
+  AJUSTE_POST_TEST
+  ALERTA_FATIGA
+  AJUSTE_LESION
+  ALERTA_DESVIACION_CARGA
+  PERSONALIZACION_TACTICA
+  NUTRICIONAL
+  AJUSTE_PLANIFICACION
+}
+
+enum Prioridad {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum EstadoRecomendacion {
+  PENDIENTE
+  EN_PROCESO
+  CUMPLIDA
+  RECHAZADA
+  MODIFICADA
+}
+
+enum TipoNotificacion {
+  RECOMENDACION_ALGORITMO
+  ALERTA_FATIGA
+  ALERTA_LESION
+  PLANIFICACION_APROBADA
+  PLANIFICACION_MODIFICADA
+  SESION_PROXIMA
+  TEST_PENDIENTE
+  OTRO
+}
+
+enum TipoLesion {
+  MOLESTIA
+  DOLOR_AGUDO
+  LESION_CRONICA
+  OTRO
+}
+
+enum TipoAlerta {
+  BAJO_RENDIMIENTO
+  PESO_FUERA_RANGO
+  LESION_DETECTADA
+  TEST_FALLIDO
+  FATIGA_ALTA
+  DESVIACION_CARGA
+}
+
+enum Severidad {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum PeriodoTolerancia {
+  GENERAL
+  ESPECIFICA_I
+  ESPECIFICA_II
+  PRE_COMPETITIVA
+  COMPETITIVA
+}
+
+enum TipoEjercicio {
+  FISICO
+  TECNICO_TACHI
+  TECNICO_NE
+  RESISTENCIA
+  VELOCIDAD
+}
+
+enum PerfilAtleta {
+  VELOZ
+  RESISTENTE
+  EQUILIBRADO
+  NUEVO
+}
